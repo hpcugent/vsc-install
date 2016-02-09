@@ -1444,6 +1444,12 @@ if __name__ == '__main__':
         'setuptools',
     ]
 
+    # For now, not enforcing readme-renderer
+    # It would complicate rpm creation too much.
+    # Should be re-added when the testing code is moved to vsc-testing
+    log.info('not enforcing readme-renderer support. run "easy_install readme-renderer" yourself')
+    #install_requires.append('readme-renderer')
+
     PACKAGE = {
         'version': VERSION,
         'author': [sdw, ag, jt],
