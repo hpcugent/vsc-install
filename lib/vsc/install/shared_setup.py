@@ -1358,7 +1358,9 @@ if __name__ == '__main__':
         'maintainer': [sdw, ag, jt],
         'install_requires': install_requires,
         'setup_requires': [
-            'setuptools >= 2.0'
+            # for running 'sdist upload', v2.0 or newer is actually required,
+            # cfr. https://github.com/hpcugent/vsc-install/issues/16
+            'setuptools >= 0.6',
         ],
         'excluded_pkgs_rpm': [], # vsc-install ships vsc package (the vsc package is removed by default)
     }
