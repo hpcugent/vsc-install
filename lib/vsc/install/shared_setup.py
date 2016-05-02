@@ -225,6 +225,7 @@ def release_on_pypi(lic):
 def get_name_url(filename=None, version=None, license_name=None):
     """
     Determine name and url of project
+        url has to be either homepage or hpcugent remote repository (typically upstream)
     """
 
     if filename is None:
@@ -255,7 +256,7 @@ def get_name_url(filename=None, version=None, license_name=None):
         ],
         'url': [
             r'^Home-page:\s*(.*?)\s*$',
-            r'^\s*url\s*=\s*(https?.*?github.*?[:/]hpcugent/.*?)\.git\s*$',
+            r'^\s*url\s*=\s*((?:https?|ssh).*?github.*?[:/]hpcugent/.*?)\.git\s*$',
             r'^\s*url\s*=\s*(git[:@].*?github.*?[:/]hpcugent/.*?)(?:\.git)?\s*$',
         ],
         'download_url' : [
@@ -277,9 +278,13 @@ def get_name_url(filename=None, version=None, license_name=None):
     if reg:
         res['url'] = "https://%s/%s" % (reg.group(1), reg.group(2))
 
+    if 'url' not in res:
+        raise KeyError("Missing url in git config %s. (Missing mandatory hpcugent (upstream) remote?)" % (res))
+
     # handle git://server/user/project
-    if res['url'].startswith('git://'):
-        res['url'] = "https://%s" % res['url'][len('git://'):]
+    reg = re.search(r'^(git|ssh)://', res.get('url', ''))
+    if reg:
+        res['url'] = "https://%s" % res['url'][len(reg.group(0)):]
 
     if not 'download_url' in res:
         if release_on_pypi(license_name):
