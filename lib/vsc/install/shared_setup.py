@@ -1345,7 +1345,7 @@ if __name__ == '__main__':
     This main is the setup.py for vsc-install
     """
     install_requires = [
-        'setuptools',
+        'setuptools >= 0.6',
     ]
     if sys.version_info < (2, 7):
         # py26 support dropped in 0.8, and the old versions don't detect enough
@@ -1363,7 +1363,9 @@ if __name__ == '__main__':
         'maintainer': [sdw, ag, jt],
         'install_requires': install_requires,
         'setup_requires': [
-            'setuptools'
+            # for running 'sdist upload', v2.0 or newer is actually required,
+            # cfr. https://github.com/hpcugent/vsc-install/issues/16
+            'setuptools >= 0.6',
         ],
         'excluded_pkgs_rpm': [],  # vsc-install ships vsc package (the vsc package is removed by default)
     }
