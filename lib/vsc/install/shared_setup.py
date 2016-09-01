@@ -1122,7 +1122,7 @@ class vsc_setup(object):
         'url': '',
         'dependency_links': [],
         'install_requires': [],
-        'tests_require': ['nose', 'mock'],
+        'tests_require': ['nose', 'mock', 'readme_renderer'],
         'setup_requires': [],
     }
 
@@ -1443,12 +1443,6 @@ if __name__ == '__main__':
     install_requires = [
         'setuptools',
     ]
-
-    # For now, not enforcing readme-renderer
-    # It would complicate rpm creation too much.
-    # Should be re-added when the testing code is moved to vsc-testing
-    log.info('not enforcing readme-renderer support. run "easy_install readme-renderer" yourself')
-    #install_requires.append('readme-renderer')
 
     PACKAGE = {
         'version': VERSION,

@@ -43,7 +43,7 @@ import sys
 
 from distutils import log
 from readme_renderer.rst import render
-from vsc.install.shared_setup import vsc_setup
+from vsc.install.shared_setup import vsc_setup, README
 from vsc.install.headers import check_header
 from vsc.install.testing import TestCase
 
@@ -53,8 +53,6 @@ HAS_PROTECTOR = False
 Prospector = None
 ProspectorConfig = None
 
-HAS_RENDERER = False
-render = None
 
 if sys.version_info >= (2, 7):
     # Do not even try on py26
@@ -223,19 +221,10 @@ class CommonTest(TestCase):
         The README has to render properly.
         """
 
-        if not HAS_RENDERER:
-            log.info('No README render tests are ran, install readme_renderer manually first')
-
-            # This is fatal on jenkins/...
-            if 'JENKINS_URL' in os.environ:
-                self.assertTrue(False, 'readme_renderer must be installed in jenkins environment')
-
-            return
-
         # inspired by the check -rs command readme_renderer.integration.distutils
 
         # existence of README is checked in shared_setup
-        readme = os.path.join(REPO_BASE_DIR, README)
+        readme = os.path.join(self.setup.REPO_BASE_DIR, README)
         data = open(readme).read()
         stream = io.StringIO()
         markup = render(data, stream=stream)

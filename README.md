@@ -3,7 +3,7 @@ Description
 vsc-install provides shared setuptools functions and classes for python libraries developed by UGent's HPC group
 
 Common pitfalls
-=========
+===============
 bdist_rpm will fail if your install_requires = 'setuptools' because it will fail to find a setuptools rpm.
 ```
 export VSC_RPM_PYTHON=1
@@ -54,10 +54,10 @@ In case following error occurs, it means there is a test module `XYZ` that canno
 
 ```txt
 File "setup.py", line 499, in loadTestsFromModule
-    testsuites = ScanningLoader.loadTestsFromModule(self, module)
+testsuites = ScanningLoader.loadTestsFromModule(self, module)
 File "build/bdist.linux-x86_64/egg/setuptools/command/test.py", line 37, in loadTestsFromModule
 File "/usr/lib64/python2.7/unittest/loader.py", line 100, in loadTestsFromName
-    parent, obj = obj, getattr(obj, part)
+parent, obj = obj, getattr(obj, part)
 AttributeError: 'module' object has no attribute 'XYZ'
 ```
 
@@ -115,7 +115,7 @@ bare-except
 -----------
 ```python
 try:
-   # something
+# something
 except:
 ```
 This is bad, because this except will also catch sys.exit() or Keyboardinterupts, something you
@@ -131,9 +131,9 @@ because it helps developers catch weird errors on their side better.
 if you do something like
 ```python
 try:
-    open(int(somestring)).write('important data')
+open(int(somestring)).write('important data')
 except Exception:
-    pass # if somestring is not an integer, we didn't need to write anyway, but otherwise we do
+pass # if somestring is not an integer, we didn't need to write anyway, but otherwise we do
 ```
 because you know sometimes this string does not contain an integer, so the int() call can fail
 you should really only catch ValueError, because this will also fail when your disk is full, or you don't have permissions
@@ -189,18 +189,17 @@ import six
 from django import six as django_six
 ```
 
-redefinition of unused name
+Redefinition of unused name
 ----------------------------
-this usually also points to something you did not expect
+This usually also points to something you did not expect.
+
 ```python
 from vsc.accountpageclient import VscGroup
-<snip>
-
 class VscGroup(object):
-    pass
+pass
 ```
 
-=> do you need the import? use import as
+Do you need the import? use import as
 did you mean to use the same name? ...
 
 unpacking-in-except / redefine-in-handler
@@ -209,9 +208,7 @@ unpacking-in-except / redefine-in-handler
 Multiple exception have to be grouped in a tuple like
 
 ```python
-    ...
 except (ExceptionOne, ExceptionTwo) ...
-    ...
 ```
 
 (espcially when used like `except A, B:` which should be `except (A, B):`.
@@ -227,13 +224,12 @@ by adding e.g. the comment `# pylint: disable=<name or numeric id of pylint code
 
 ```python
 class Something(object):
-    def dosomething(self, some, thing):
-        # do something
-
+def dosomething(self, some, thing):
+# do something
 class MyFancyThing(SomeThing):
-    # pylint: disable=arguments-differ
-    def dosomething(self, some, thing, fancy=None):
-         # do something fancy
+# pylint: disable=arguments-differ
+def dosomething(self, some, thing, fancy=None):
+# do something fancy
 ```
 
 Full list with all codes is available at http://pylint-messages.wikidot.com/all-codes
