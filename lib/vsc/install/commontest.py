@@ -33,6 +33,7 @@ Running python setup.py test will pick this up and do its magic
 
 @author: Stijn De Weirdt (Ghent University)
 """
+import io
 import logging
 import optparse
 import os
@@ -41,7 +42,8 @@ import re
 import sys
 
 from distutils import log
-from vsc.install.shared_setup import vsc_setup
+from readme_renderer.rst import render
+from vsc.install.shared_setup import vsc_setup, README
 from vsc.install.headers import check_header
 from vsc.install.testing import TestCase
 
@@ -50,6 +52,7 @@ from vsc.install.testing import TestCase
 HAS_PROTECTOR = False
 Prospector = None
 ProspectorConfig = None
+
 
 if sys.version_info >= (2, 7):
     # Do not even try on py26
@@ -212,3 +215,27 @@ class CommonTest(TestCase):
         optparse.HelpFormatter.expand_default = orig_expand_default
 
         self.assertFalse(failures, "prospector failures: %s" % pprint.pformat(failures))
+
+    def test_readme_renderer(self):
+        """
+        The README has to render properly.
+        """
+
+        # inspired by the check -rs command readme_renderer.integration.distutils
+
+        # existence of README is checked in shared_setup
+        readme = os.path.join(self.setup.REPO_BASE_DIR, README)
+        data = open(readme).read()
+        stream = io.StringIO()
+        markup = render(data, stream=stream)
+
+        failures = []
+        for line in stream.getvalue().splitlines():
+            if line.startswith("<string>"):
+                line = line[8:]
+            failures.append(line)
+
+        self.assertFalse(failures, "readme_renderer failures: %s" % pprint.pformat(failures))
+
+        if markup is None:
+            self.assertTrue(False, "Invalid markup which will not be rendered on PyPI.")
