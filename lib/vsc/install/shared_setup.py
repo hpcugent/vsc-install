@@ -147,7 +147,7 @@ URL_GHUGENT_HPCUGENT = 'https://github.ugent.be/hpcugent/%(name)s'
 
 RELOAD_VSC_MODS = False
 
-VERSION = '0.10.14'
+VERSION = '0.10.15'
 
 log.info('This is (based on) vsc.install.shared_setup %s' % VERSION)
 
@@ -712,7 +712,7 @@ class vsc_setup(object):
 
         TEST_LOADER_MODULE = __name__
 
-        def loadTestsFromModule(self, module, pattern=None):
+        def loadTestsFromModule(self, module, pattern=None):  # pylint: disable=arguments-differ
             """
             Support test module and function name based filtering
             """
