@@ -1122,7 +1122,7 @@ class vsc_setup(object):
         'command_packages': ['vsc.install.shared_setup', NEW_SHARED_SETUP, 'setuptools.command', 'distutils.command'],
         'download_url': '',
         'package_dir': {'': DEFAULT_LIB_DIR},
-        'setup_requires': ['setuptools', 'vsc-install >= %s' % VERSION],
+        'setup_requires': [],
         'test_suite': DEFAULT_TEST_SUITE,
         'url': '',
         'dependency_links': [],
