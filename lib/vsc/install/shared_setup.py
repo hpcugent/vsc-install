@@ -1523,8 +1523,7 @@ if __name__ == '__main__':
     This main is the setup.py for vsc-install
     """
     install_requires = [
-        'setuptools',
-        'future'
+        'setuptools'
     ]
 
     PACKAGE = {
