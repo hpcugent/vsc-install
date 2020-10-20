@@ -662,7 +662,10 @@ class vsc_setup(object):
                     if pyshebang_reg.search(first_line):
                         log.info("going to adapt shebang for script %s" % fn)
                         dest, code = self._recopy(base_dir, fn)
-                        code = pyshebang_reg.sub(SHEBANG_STRIPPED_ENV_PYTHON, code)
+                        pyshebang_line = first_line.split()
+                        pyshebang_line[0] = SHEBANG_STRIPPED_ENV_PYTHON
+                        pyshebang_line = ' '.join(pyshebang_line)
+                        code = pyshebang_reg.sub(pyshebang_line, code)
                         self._write(dest, code)
             else:
                 log.info("no scripts to check for shebang")
