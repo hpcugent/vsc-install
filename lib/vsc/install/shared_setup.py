@@ -263,12 +263,29 @@ def _fvs(msg=None):
 
 
 def _read(source, read_lines=False):
-    """read a file, either in full or as a list (read_lines=True)"""
-    with open(source) as file_handle:
+    """read a file, either in full or as a list (read_lines=True) and decode UTF-8 files into ASCII"""
+
+    def file_read(file_handle, read_lines):
+        """raw read action on file handle, either in full or as a list (read_lines=True)"""
         if read_lines:
             txt = file_handle.readlines()
         else:
             txt = file_handle.read()
+        return txt
+
+    try:
+        with open(source) as file_handle:
+            txt = file_read(file_handle, read_lines)
+    except UnicodeDecodeError:
+        # Python 3 fails to read file encoded in utf-8, try again setting the encoding
+        with open(source, encoding='utf-8') as file_handle:
+            txt = file_read(file_handle, read_lines)
+        # decode to ASCII removing non-conformant characters
+        if read_lines:
+            txt = [line.encode('utf-8').decode('ascii', 'ignore') for line in txt]
+        else:
+            txt = txt.encode('utf-8').decode('ascii', 'ignore')
+
     return txt
 
 
