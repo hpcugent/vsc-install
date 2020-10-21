@@ -31,27 +31,19 @@
 set -e -u
 
 # default python interpreter
-DEFAULT_PYTHON=/usr/bin/python
+PYTHON=/usr/bin/python
 
-# check arguments for any known python interpreter
+# check first argument for any known python interpreter
 first_arg=${1:-false}
 case "$first_arg" in
     python*)
-        # use first argument if it is an available interpreter
+        # replace $PYTHON with first argument if it's an available interpreter
         if command -v $1 &> /dev/null; then
             PYTHON=$(which $1)
-        else
-            # fallback to default option
-            PYTHON=$DEFAULT_PYTHON
         fi
         shift
         ;;
-    *)
-        # default interpreter if nothing was specified
-        PYTHON=$DEFAULT_PYTHON
-        ;;
 esac
-echo $PYTHON
 
 # avoid weird issue with grep (for example, colored output)
 unset GREP_OPTIONS
