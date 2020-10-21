@@ -36,7 +36,7 @@ PYTHON=/usr/bin/python
 # check first argument for any known python interpreter
 first_arg=${1:-false}
 case "$first_arg" in
-    python*)
+    python|python[23]|python[23].[0-9]*)
         # replace $PYTHON with first argument if it's an available interpreter
         if command -v $1 &> /dev/null; then
             PYTHON=$(which $1)
