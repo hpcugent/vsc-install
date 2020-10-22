@@ -277,14 +277,9 @@ def _read(source, read_lines=False):
         with open(source) as file_handle:
             txt = file_read(file_handle, read_lines)
     except UnicodeDecodeError:
-        # Python 3 fails to read file encoded in utf-8, try again setting the encoding
-        with open(source, encoding='utf-8') as file_handle:
+        # file contains unicode characters, try again backslashing them
+        with open(source, encoding='ascii', errors="backslashreplace") as file_handle:
             txt = file_read(file_handle, read_lines)
-        # decode to ASCII removing non-conformant characters
-        if read_lines:
-            txt = [line.encode('utf-8').decode('ascii', 'ignore') for line in txt]
-        else:
-            txt = txt.encode('utf-8').decode('ascii', 'ignore')
 
     return txt
 
