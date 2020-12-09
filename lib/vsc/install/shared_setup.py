@@ -204,7 +204,16 @@ EXTERNAL_DIR = 'external_dist_only'
 
 
 # location of README file
-README = 'README.md'
+README_BASE = ['README']
+# see https://packaging.python.org/guides/making-a-pypi-friendly-readme/
+README_TYPES = {
+    '.md': 'text/markdown',
+    '.rst': 'text/x-rst',
+    '.txt': 'text/plain',
+    # fallback in case README file has no extension
+    '': 'text/plain',
+}
+README = ['%s%s' % (base, ext) for base in README_BASE for ext in README_TYPES]
 
 # location of LICENSE file
 LICENSE = 'LICENSE'
@@ -337,6 +346,9 @@ class vsc_setup(object):
 
         self.package_files = self.files_in_packages()
         self.private_repo = False
+
+        # determine location of README file in the package
+        self.readme = self.locate_readme()
 
     @staticmethod
     def release_on_pypi(lic):
@@ -647,7 +659,7 @@ class vsc_setup(object):
                 self._add_shared_setup(base_dir)
 
             # Add mandatory files
-            for fn in [LICENSE, README]:
+            for fn in [LICENSE] + README:
                 self.copy_file(os.path.join(self.setup.REPO_BASE_DIR, fn), os.path.join(base_dir, fn))
 
     class vsc_sdist_rpm(vsc_sdist):
@@ -1324,6 +1336,23 @@ class vsc_setup(object):
         log.info("Found license name %s and classifier %s", lic_short, data[1])
         return lic_short, data[1]
 
+    def locate_readme(self):
+        """
+        Returns path to README file in the package from allowed options in README global
+        The highest option in README global is preferred
+        """
+        readme = None
+
+        for readme_path in [os.path.join(self.REPO_BASE_DIR, readme_file) for readme_file in README]:
+            if os.path.exists(readme_path):
+                readme = readme_path
+                break
+
+        if readme is None:
+            raise Exception('README is missing (was looking for: %s)' % ", ".join(README))
+
+        return readme
+
     def parse_target(self, target, urltemplate=None):
         """
         Add some fields
@@ -1377,16 +1406,12 @@ class vsc_setup(object):
                 new_target['download_url'] = "%s/tarball/master" % new_target['url']
 
         # Readme are required
-        readme = os.path.join(self.REPO_BASE_DIR, README)
-        if not os.path.exists(readme):
-            raise Exception('README is missing (was looking for %s)' % readme)
-
         vsc_description = target.pop('vsc_description', True)
         if vsc_description:
             if 'long_description' in target:
                 log.info(('Going to ignore the provided long_descripton.'
-                          'Set it in the %s or disable vsc_description') % README)
-            readmetxt = _read(readme)
+                          'Set it in the %s or disable vsc_description') % os.path.basename(self.readme))
+            readmetxt = _read(self.readme)
 
             # look for description block, read text until double empty line or new block
             # allow 'words with === on next line' or comment-like block '# title'
@@ -1403,24 +1428,16 @@ class vsc_setup(object):
                 descr = re.sub(r'\s+', ' ', descr)  # squash whitespace
             except IndexError:
                 raise Exception('Could not find a Description block in the README %s to create the long description' %
-                                readme)
+                                self.readme)
             log.info('using long_description %s' % descr)
             new_target['description'] = descr  # summary in PKG-INFO
             new_target['long_description'] = readmetxt  # description in PKG-INFO
 
-            readme_ext = os.path.splitext(readme)[-1]
-            # see https://packaging.python.org/guides/making-a-pypi-friendly-readme/
-            readme_content_types = {
-                '.md': 'text/markdown',
-                '.rst': 'text/x-rst',
-                '.txt': 'text/plain',
-                # fallback in case README file has no extension
-                '': 'text/plain',
-            }
-            if readme_ext in readme_content_types:
-                new_target['long_description_content_type'] = readme_content_types[readme_ext]
+            readme_ext = os.path.splitext(self.readme)[-1]
+            if readme_ext in README_TYPES:
+                new_target['long_description_content_type'] = README_TYPES[readme_ext]
             else:
-                raise Exception("Failed to derive content type for README file '%s' based on extension" % readme)
+                raise Exception("Failed to derive content type for README file '%s' based on extension" % self.readme)
 
         vsc_scripts = target.pop('vsc_scripts', True)
         if vsc_scripts:
@@ -1518,7 +1535,7 @@ class vsc_setup(object):
         return new_target
 
     @staticmethod
-    def build_setup_cfg_for_bdist_rpm(target):
+    def build_setup_cfg_for_bdist_rpm(target, readme):
         """Generates a setup.cfg on a per-target basis.
 
         Create [bdist_rpm] section with
@@ -1527,8 +1544,10 @@ class vsc_setup(object):
             setup_requires => build_requires
 
         @type target: dict
+        @type readme: string
 
         @param target: specifies the options to be passed to setup()
+        @param readme: path to README file provided by package
         """
 
         if target.pop('makesetupcfg', True):
@@ -1556,7 +1575,7 @@ class vsc_setup(object):
             txt.extend(["build_requires = %s" % (klass.sanitize(target['setup_requires']))])
 
         # add metadata
-        txt += ['', '[metadata]', '', 'description-file = %s' % README, '']
+        txt += ['', '[metadata]', '', 'description-file = %s' % os.path.basename(readme), '']
 
         setup_cfg.write("\n".join(txt+['']))
         setup_cfg.close()
@@ -1578,7 +1597,7 @@ class vsc_setup(object):
         # therefor we regenerate self.package files with the excluded pkgs as extra param
         self.package_files = self.files_in_packages(excluded_pkgs=pkgs)
         _fvs('prepare_rpm').SHARED_TARGET['packages'] = self.generate_packages()
-        self.build_setup_cfg_for_bdist_rpm(target)
+        self.build_setup_cfg_for_bdist_rpm(target, self.readme)
 
     def action_target(self, target, setupfn=None, extra_sdist=None, urltemplate=None):
         """
