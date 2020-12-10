@@ -206,14 +206,15 @@ EXTERNAL_DIR = 'external_dist_only'
 # location of README file
 README_BASE = ['README']
 # see https://packaging.python.org/guides/making-a-pypi-friendly-readme/
+README_EXT = ('.md', '.rst', '.txt', '')
 README_TYPES = {
     '.md': 'text/markdown',
     '.rst': 'text/x-rst',
     '.txt': 'text/plain',
-    # fallback in case README file has no extension
-    '': 'text/plain',
+    '': 'text/plain',  # fallback in case README file has no extension
 }
-README = ['%s%s' % (base, ext) for base in README_BASE for ext in README_TYPES]
+README = ['%s%s' % (base, ext) for base in README_BASE for ext in README_EXT]
+print('READMEEEE', README)
 
 # location of LICENSE file
 LICENSE = 'LICENSE'
