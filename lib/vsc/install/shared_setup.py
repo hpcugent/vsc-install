@@ -1345,6 +1345,7 @@ class vsc_setup(object):
                 readme = readme_path
                 break
 
+        # README is required
         if readme is None:
             raise Exception('README is missing (was looking for: %s)' % ", ".join(README))
 
@@ -1403,7 +1404,7 @@ class vsc_setup(object):
             if 'github' in urltemplate:
                 new_target['download_url'] = "%s/tarball/master" % new_target['url']
 
-        # README is required, use description file from target and remove it
+        # Use description file from target and remove attribute (not needed any more)
         readme_file = target.pop('description_file', None)
 
         # set description from README
