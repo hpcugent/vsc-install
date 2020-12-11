@@ -1582,8 +1582,9 @@ class vsc_setup(object):
             txt.extend(["build_requires = %s" % (klass.sanitize(target['setup_requires']))])
 
         # add metadata
-        description_file = target.get('description_file', 'Unknown')
-        txt += ['', '[metadata]', '', 'description-file = %s' % os.path.basename(description_file), '']
+        if 'description_file' in target:
+            description_file = os.path.basename(target['description_file'])
+            txt += ['', '[metadata]', '', 'description-file = %s' % description_file, '']
 
         setup_cfg.write("\n".join(txt+['']))
         setup_cfg.close()
