@@ -1,6 +1,6 @@
 # -*- coding: latin-1 -*-
 #
-# Copyright 2011-2020 Ghent University
+# Copyright 2011-2021 Ghent University
 #
 # This file is part of vsc-install,
 # originally created by the HPC team of Ghent University (http://ugent.be/hpc/en),
@@ -146,8 +146,9 @@ ad = ('Alex Domingo', 'alex.domingo.toro@vub.be')
 
 # available remotes
 GIT_REMOTES = [
-    'hpcugent',
-    'sisc-hpc',
+    ('github.com', 'hpcugent'),
+    ('github.com', 'vub-hpc'),
+    ('dev.azure.com', 'VUB-ICT'),
 ]
 
 # Regexp used to remove suffixes from scripts when installing(/packaging)
@@ -166,7 +167,7 @@ URL_GHUGENT_HPCUGENT = 'https://github.ugent.be/hpcugent/%(name)s'
 
 RELOAD_VSC_MODS = False
 
-VERSION = '0.17.3'
+VERSION = '0.17.14'
 
 log.info('This is (based on) vsc.install.shared_setup %s' % VERSION)
 log.info('(using setuptools version %s located at %s)' % (setuptools.__version__, setuptools.__file__))
@@ -237,6 +238,9 @@ KNOWN_LICENSES = {
 # a whitelist of licenses that allow pushing to pypi during vsc_release
 PYPI_LICENSES = ['LGPLv2+', 'GPLv2']
 
+# environment variable name to set when building rpms from vsc-install managed repos
+#    indicates the python version it is being build for
+VSC_RPM_PYTHON = 'VSC_RPM_PYTHON'
 
 def _fvs(msg=None):
     """
@@ -379,7 +383,8 @@ class vsc_setup(object):
 
         # multiline search
         # github pattern for hpcugent, not fork
-        github_domain_pattern = '(?:%s)' % '|'.join(GIT_REMOTES)
+        git_remote_patterns = ['%s.*?[:/]%s' % remote for remote in GIT_REMOTES]
+        git_domain_pattern = '(?:%s)' % '|'.join(git_remote_patterns)
         all_patterns = {
             'name': [
                 r'^Name:\s*(.*?)\s*$',
@@ -387,8 +392,8 @@ class vsc_setup(object):
             ],
             'url': [
                 r'^Home-page:\s*(.*?)\s*$',
-                r'^\s*url\s*=\s*((?:https?|ssh).*?github.*?[:/]%s/.*?)(?:\.git)?\s*$' % github_domain_pattern,
-                r'^\s*url\s*=\s*(git[:@].*?github.*?[:/]%s/.*?)(?:\.git)?\s*$' % github_domain_pattern,
+                r'^\s*url\s*=\s*((?:https?|ssh).*?%s/.*?)(?:\.git)?\s*$' % git_domain_pattern,
+                r'^\s*url\s*=\s*(git[:@].*?%s/.*?)(?:\.git)?\s*$' % git_domain_pattern,
             ],
             'download_url': [
                 r'^Download-URL:\s*(.*?)\s*$',
@@ -412,7 +417,7 @@ class vsc_setup(object):
             self.private_repo = True
 
         if 'url' not in res:
-            allowed_remotes = ', '.join(GIT_REMOTES)
+            allowed_remotes = ', '.join(['%s/%s' % remote for remote in GIT_REMOTES])
             raise KeyError("Missing url in git config %s. (Missing mandatory remote? %s)" % (res, allowed_remotes))
 
         # handle git://server/user/project
@@ -703,13 +708,11 @@ class vsc_setup(object):
                 os.mkdir(setupper.REPO_LIB_DIR)
                 cleanup.append(setupper.REPO_LIB_DIR)
 
-            res = egg_info.finalize_options(self, *args, **kwargs)
+            egg_info.finalize_options(self, *args, **kwargs)
 
             # cleanup any diretcories created
             for directory in cleanup:
                 shutil.rmtree(directory)
-
-            return res
 
         def find_sources(self):
             """Default lookup."""
@@ -1038,12 +1041,11 @@ class vsc_setup(object):
                 __import__(DEFAULT_TEST_SUITE)
             self.reload_modules(DEFAULT_TEST_SUITE)
 
-            res = TestCommand.run_tests(self)
+            TestCommand.run_tests(self)
 
             # cleanup any diretcories created
             for directory in cleanup:
                 shutil.rmtree(directory)
-            return res
 
     @staticmethod
     def add_and_remove(alist, extra=None, exclude=None):
@@ -1266,7 +1268,7 @@ class vsc_setup(object):
             klass = _fvs('sanitize')
             return "\n    ".join([klass.sanitize(r) for r in name])
         else:
-            pyversuff = os.environ.get('VSC_RPM_PYTHON', None)
+            pyversuff = os.environ.get(VSC_RPM_PYTHON, None)
             if pyversuff in ("1", "2", "3"):
                 # enable VSC-style naming for Python packages: use 'python2-*' or 'python3-*',
                 # unless '1' is used as value for $VSC_RPM_PYTHON, then use 'python-*' for legacy behaviour
@@ -1391,6 +1393,11 @@ class vsc_setup(object):
         new_target['license'] = lic_name
         classifiers.append(lic_classifier)
 
+        # a dict with key the new_target key to search and replace
+        #    value is a list of 2-element (pattern, replace) lists passed to re.sub
+        #    if returning value is empty, it is not added after the replacement
+        vsc_filter_rpm = target.pop('vsc_filter_rpm', {})
+
         # set name, url, download_url (skip name if it was specified)
         update = self.get_name_url(version=target['version'], license_name=lic_name)
         if 'name' in target:
@@ -1450,7 +1457,7 @@ class vsc_setup(object):
 
         vsc_scripts = target.pop('vsc_scripts', True)
         if vsc_scripts:
-            candidates = self.generate_scripts()
+            candidates = self.generate_scripts(exclude=['__pycache__'])
             if candidates:
                 if 'scripts' in target:
                     old_scripts = target.pop('scripts', [])
@@ -1505,6 +1512,10 @@ class vsc_setup(object):
             tests_requires.append('isort < 5.0')
         else:
             tests_requires.extend([
+                # stick to older flake8, to avoid version conflict on pyflakes dependency
+                # flake8 3.9.0 requires pyflakes<2.4.0,>=2.3.0
+                # prospector 1.3.1 requires pyflakes<2.3.0,>=2.2.0
+                'flake8 < 3.9.0',
                 'prospector',
                 'mock',
             ])
@@ -1539,18 +1550,49 @@ class vsc_setup(object):
                     new_target['dependency_links'] += [''.join([git_scheme, url, '/hpcugent/', dep_name, '.git#egg=',
                                                                 dep_name_version])]
 
+        if VSC_RPM_PYTHON in os.environ:
+            for key, pattern_replace_list in vsc_filter_rpm.items():
+                def search_replace(txt):
+                    for pattern, replace in pattern_replace_list:
+                        txt = re.sub(pattern, replace, txt)
+                    return txt
+
+                if key in new_target:
+                    log.debug("Found VSC_RPM_PYTHON set and vsc_filter_rpm for %s set to %s", key, pattern_replace_list)
+                    old = new_target.pop(key)
+                    if isinstance(old, list):
+                        # remove empty strings
+                        new = [y for y in [search_replace(x) for x in old] if y]
+                    else:
+                        log.error("vsc_filter_rpm does not support %s for %s", type(old), key)
+                        sys.exit(1)
+                    if new:
+                        log.debug("new vsc_filter_rpm value for %s: %s", key, new)
+                        new_target[key] = new
+                    else:
+                        log.debug("new vsc_filter_rpm value for %s was empty, not adding it back", key)
+
         log.debug("New target = %s" % (new_target))
-        print(new_target)
+        print("new target", new_target)
         return new_target
 
     @staticmethod
     def build_setup_cfg_for_bdist_rpm(target):
         """Generates a setup.cfg on a per-target basis.
 
-        Create [bdist_rpm] section with
+        Can be skipped by setting 'makesetupcfg' to False in setup.py
+
+        Creates [bdist_rpm] section with
             install_requires => requires
             provides => provides
             setup_requires => build_requires
+
+        Creates [metadata] section with
+            description-file => README file
+
+        Creates [install] section if needed,
+        if any of the following are specified via setup.py:
+            install-scripts => non-standard location for scripts/binaries
 
         @type target: dict
 
@@ -1570,7 +1612,19 @@ class vsc_setup(object):
             sys.exit(1)
 
         klass = _fvs('build_setup_cfg_for_bdist_rpm')
-        txt = ["[bdist_rpm]"]
+
+        txt = []
+
+        # specify non-standard location for scripts/binaries, if specified
+        install_scripts = target.pop('install-scripts', None)
+        if install_scripts:
+            txt.extend([
+                '[install]',
+                'install-scripts = %s' % install_scripts,
+                '',
+            ])
+
+        txt.append("[bdist_rpm]")
         if 'install_requires' in target:
             txt.extend(["requires = %s" % (klass.sanitize(target['install_requires']))])
 
@@ -1595,7 +1649,6 @@ class vsc_setup(object):
             exclude files provided by packages that are shared
                 excluded_pkgs_rpm: is a list of packages, default to ['vsc']
                 set it to None when defining own function
-            generate the setup.cfg using build_setup_cfg_for_bdist_rpm
         """
         pkgs = target.pop('excluded_pkgs_rpm', ['vsc'])
         if pkgs is not None:
@@ -1606,7 +1659,6 @@ class vsc_setup(object):
         # therefor we regenerate self.package files with the excluded pkgs as extra param
         self.package_files = self.files_in_packages(excluded_pkgs=pkgs)
         _fvs('prepare_rpm').SHARED_TARGET['packages'] = self.generate_packages()
-        self.build_setup_cfg_for_bdist_rpm(target)
 
     def action_target(self, target, setupfn=None, extra_sdist=None, urltemplate=None):
         """
@@ -1640,8 +1692,12 @@ class vsc_setup(object):
         target['description_file'] = self.locate_readme()
 
         self.prepare_rpm(target)
-        x = self.parse_target(target, urltemplate)
-        setupfn(**x)
+
+        new_target = self.parse_target(target, urltemplate)
+        # generate the setup.cfg using build_setup_cfg_for_bdist_rpm
+        self.build_setup_cfg_for_bdist_rpm(new_target)
+
+        setupfn(**new_target)
 
 # here for backwards compatibility
 SHARED_TARGET = _fvs('SHARED_TARGET').SHARED_TARGET

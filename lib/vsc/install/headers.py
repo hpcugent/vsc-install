@@ -1,5 +1,5 @@
 #
-# Copyright 2015-2020 Ghent University
+# Copyright 2015-2021 Ghent University
 #
 # This file is part of vsc-install,
 # originally created by the HPC team of Ghent University (http://ugent.be/hpc/en),
@@ -292,7 +292,7 @@ institute_details = {
         'university_url': 'http://ugent.be/hpc',
         'university_team_url': 'http://ugent.be/hpc/en',
     },
-    'sisc-hpc': {
+    'vub-hpc': {
         'university_name': 'Vrije Universiteit Brussel',
         'university_url': 'https://www.vub.be',
         'university_team_url': 'https://hpc.vub.be',

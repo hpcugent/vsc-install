@@ -1,5 +1,5 @@
 #
-# Copyright 2016-2020 Ghent University
+# Copyright 2016-2021 Ghent University
 #
 # This file is part of vsc-install,
 # originally created by the HPC team of Ghent University (http://ugent.be/hpc/en),
@@ -66,8 +66,8 @@ class TestSetup(TestCase):
         fn = 'git_config_6'
         res_brussel = {
             'name': 'vsc-jobs-brussel',
-            'url': 'https://github.com/sisc-hpc/vsc-jobs-brussel',
-            'download_url': 'https://github.com/sisc-hpc/vsc-jobs-brussel/archive/0.1.0.tar.gz',
+            'url': 'https://github.com/vub-hpc/vsc-jobs-brussel',
+            'download_url': 'https://github.com/vub-hpc/vsc-jobs-brussel/archive/0.1.0.tar.gz',
         }
         self.assertEqual(self.setup.get_name_url(os.path.join(self.setup.REPO_TEST_DIR, 'setup', fn), version='0.1.0'),
                          res_brussel,
@@ -256,3 +256,123 @@ class TestSetup(TestCase):
 
         package['install_requires'].append('vsc-utils<=1.0.0')
         self.assertRaises(ValueError, setup.parse_target, package)
+
+    def test_parse_vsc_filter(self):
+        """Test injecting dependency_links in parse_target"""
+        inst_req = [
+            'vsc-config >= 2.0.0',
+            'vsc-accountpage-clients',
+            'vsc-base > 1.0.0',
+        ]
+
+        def pkg(vfr):
+            pkg = {
+                'name': 'vsc-test',
+                'excluded_pkgs_rpm': [],
+                'version': '1.0',
+                'install_requires': inst_req[:],
+            }
+            if vfr:
+                pkg.update(vfr)
+            return pkg
+
+        def test_target(vfr, expected):
+            setup = vsc_setup()
+            new_target = setup.parse_target(pkg(vfr))
+            self.assertEqual(new_target['install_requires'], expected)
+
+        vfr = {
+            'vsc_filter_rpm': {
+                'install_requires': [
+                    ['vsc-base.*', ''],
+                    ['^(vsc-config).*', '\g<1>'], # strip version info for vsc-config
+                ],
+            },
+        }
+
+        os.environ.pop('VSC_RPM_PYTHON', None)
+
+        # nothing in env, nothing passed as vfr
+        test_target({}, inst_req)
+        # nothing set in env
+        test_target(vfr, inst_req)
+
+        os.environ['VSC_RPM_PYTHON'] = '3'
+        # something in env, nothing passed as vfr
+        test_target({}, inst_req)
+        # something in env
+        test_target(vfr, ['vsc-config', 'vsc-accountpage-clients'])
+
+    def test_setup_cfg(self):
+        """Test generating of setup.cfg."""
+
+        def read_setup_cfg():
+            with open('setup.cfg') as fp:
+                return fp.read().strip()
+
+        os.chdir(self.tmpdir)
+
+        # test with minimal target
+        vsc_setup.build_setup_cfg_for_bdist_rpm({})
+        expected = '\n'.join([
+            '[bdist_rpm]',
+            '',
+            '[metadata]',
+            '',
+            'description-file = README.md',
+        ])
+        self.assertEqual(read_setup_cfg(), expected)
+
+        # realistic target
+        target = {
+            'install_requires': ['vsc-base >= 3.1.0', 'vsc-ldap', 'requests', 'foobar < 1.0'],
+            'setup_requires': ['vsc-install >= 0.17.11'],
+        }
+        vsc_setup.build_setup_cfg_for_bdist_rpm(target)
+        expected = '\n'.join([
+            '[bdist_rpm]',
+            'requires = vsc-base >= 3.1.0',
+            '    vsc-ldap',
+            '    requests',
+            '    foobar < 1.0',
+            'build_requires = vsc-install >= 0.17.11',
+            '',
+            '[metadata]',
+            '',
+            'description-file = README.md',
+        ])
+        self.assertEqual(read_setup_cfg(), expected)
+
+        # provides is rare, but it happens (see icinga-checks)
+        target['provides'] = 'perl(utils)'
+        vsc_setup.build_setup_cfg_for_bdist_rpm(target)
+        expected_provides = expected.replace('build_requires', 'provides = perl(utils)\nbuild_requires')
+        self.assertEqual(read_setup_cfg(), expected_provides)
+
+        # provides is filtered out after calling build_setup_cfg_for_bdist_rpm
+        self.assertFalse('provides' in target)
+
+        # alternate location of scripts/binaries also specified
+        target['install-scripts'] = '/path/to/scripts'
+        vsc_setup.build_setup_cfg_for_bdist_rpm(target)
+        expected = '\n'.join([
+            '[install]',
+            'install-scripts = /path/to/scripts',
+            '',
+            expected,
+        ])
+        self.assertEqual(read_setup_cfg(), expected)
+
+        # install-scripts is filtered out after calling build_setup_cfg_for_bdist_rpm
+        self.assertFalse('install-scripts' in target)
+
+        # if makesetupcfg is set to False, existing setup.cfg is left untouched
+        setup_cfg_txt = 'thisdoesnotreallymatter'
+        with open('setup.cfg', 'w') as fp:
+            fp.write(setup_cfg_txt)
+
+        target['makesetupcfg'] = False
+        vsc_setup.build_setup_cfg_for_bdist_rpm(target)
+        self.assertEqual(read_setup_cfg(), setup_cfg_txt)
+
+        self.assertFalse('makesetupcfg' in target)

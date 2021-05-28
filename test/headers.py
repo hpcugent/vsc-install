@@ -1,5 +1,5 @@
 #
-# Copyright 2016-2020 Ghent University
+# Copyright 2016-2021 Ghent University
 #
 # This file is part of vsc-install,
 # originally created by the HPC team of Ghent University (http://ugent.be/hpc/en),
@@ -113,7 +113,7 @@ class TestHeaders(TestCase):
             'name': 'projectname',
             'beginyear': 1234,
             'endyear': 5678,
-            'url': 'https://github.com/sisc-hpc/projectname',
+            'url': 'https://github.com/vub-hpc/projectname',
         }
         for license in KNOWN_LICENSES.keys():
             res_fn = os.path.join(self.setup.REPO_TEST_DIR, 'headers', license)
