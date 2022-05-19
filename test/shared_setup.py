@@ -313,7 +313,10 @@ class TestSetup(TestCase):
         os.chdir(self.tmpdir)
 
         # test with minimal target
-        vsc_setup.build_setup_cfg_for_bdist_rpm({})
+        target = {
+            'description_file': 'README.md',
+        }
+        vsc_setup.build_setup_cfg_for_bdist_rpm(target)
         expected = '\n'.join([
             '[bdist_rpm]',
             '',
@@ -325,6 +328,7 @@ class TestSetup(TestCase):
 
         # realistic target
         target = {
+            'description_file': 'README.md',
             'install_requires': ['vsc-base >= 3.1.0', 'vsc-ldap', 'requests', 'foobar < 1.0'],
             'setup_requires': ['vsc-install >= 0.17.11'],
         }
