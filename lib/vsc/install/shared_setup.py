@@ -1,6 +1,6 @@
 # -*- coding: latin-1 -*-
 #
-# Copyright 2011-2021 Ghent University
+# Copyright 2011-2022 Ghent University
 #
 # This file is part of vsc-install,
 # originally created by the HPC team of Ghent University (http://ugent.be/hpc/en),
@@ -119,6 +119,7 @@ if log.Log.__name__ != 'NewLog':
                 return self._orig_log(self, level, newmsg, args)
             except Exception:
                 print(newmsg % args)
+                return None
 
     log.Log = NewLog
     log._global_log = NewLog()
@@ -146,6 +147,7 @@ ad = ('Alex Domingo', 'alex.domingo.toro@vub.be')
 
 # available remotes
 GIT_REMOTES = [
+    ('github.ugent.be', 'hpcugent'),
     ('github.com', 'hpcugent'),
     ('github.com', 'vub-hpc'),
     ('dev.azure.com', 'VUB-ICT'),
@@ -167,7 +169,7 @@ URL_GHUGENT_HPCUGENT = 'https://github.ugent.be/hpcugent/%(name)s'
 
 RELOAD_VSC_MODS = False
 
-VERSION = '0.17.14'
+VERSION = '0.17.24'
 
 log.info('This is (based on) vsc.install.shared_setup %s' % VERSION)
 log.info('(using setuptools version %s located at %s)' % (setuptools.__version__, setuptools.__file__))
@@ -434,6 +436,9 @@ class vsc_setup(object):
                 res['download_url'] = None
             elif 'github' in res.get('url', '') and version is not None:
                 res['download_url'] = "%s/archive/%s.tar.gz" % (res['url'], version)
+            else:
+                # other remotes have no external download url
+                res['download_url'] = None
 
         if len(res) != 3:
             raise Exception("Cannot determine name, url and download url from filename %s: got %s" % (filename, res))
@@ -1510,13 +1515,30 @@ class vsc_setup(object):
             tests_requires.append('mock < 4.0')
             # isort 5.0 is no longer compatible with Python 2
             tests_requires.append('isort < 5.0')
+            # pyyaml > 5.4.1 fails for python 2.7
+            tests_requires.append('pyyaml >= 5.4.1, < 6.0')
+            # lazy_object_proxy 1.7.0 no longer compatible with python 2
+            tests_requires.append('lazy_object_proxy < 1.7.0')
+            # requirements-detector 1.0.0 no longer compatible with python 2
+            tests_requires.append('requirements-detector < 1.0.0')
         else:
+            # soft pinning of (transitive) dependencies of prospector
+            # ('~=' means stick to compatible release, https://www.python.org/dev/peps/pep-0440/#compatible-release);
+            # updating these must be done in lockstep, see setup.cfg or pyproject.toml or whatever at:
+            # - https://github.com/PyCQA/pylint/blob/v2.12.2/setup.cfg
+            # - https://github.com/PyCQA/flake8/blob/3.9.2/setup.cfg
+            # - https://github.com/PyCQA/prospector/blob/1.5.3.1/pyproject.toml
             tests_requires.extend([
-                # stick to older flake8, to avoid version conflict on pyflakes dependency
-                # flake8 3.9.0 requires pyflakes<2.4.0,>=2.3.0
-                # prospector 1.3.1 requires pyflakes<2.3.0,>=2.2.0
-                'flake8 < 3.9.0',
-                'prospector',
+                'pyflakes~=2.3.0',
+                'pycodestyle~=2.7.0',
+                'pylint~=2.12.2',
+                'flake8~=3.9.2',
+                'prospector~=1.5.3.1',
+                'pylint-plugin-utils < 0.7',
+                'pylint-django~=2.4.4',
+                # platformdirs >= 2.4.0 requires Python 3.7, use older versions for running tests with Python 3.6
+                'platformdirs < 2.4.0',
+                'typing-extensions < 4.2.0', # higher requires python 3.7
                 'mock',
             ])
 
