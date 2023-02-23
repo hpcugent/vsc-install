@@ -120,8 +120,8 @@ EXPECTED_GITHUB_ACTIONS = """# .github/workflows/unittest.yml: configuration fil
 # DO NOT EDIT MANUALLY
 jobs:
   python_unittests:
-    runs-on: ubuntu-20.04
     container: rockylinux:8
+    runs-on: ubuntu-20.04
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
