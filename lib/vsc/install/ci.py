@@ -106,6 +106,7 @@ def gen_github_action(repo_base_dir=os.getcwd()):
             'jobs': {
                 'python_unittests': {
                     'runs-on': 'ubuntu-20.04',
+                    'container': 'rockylinux:8',
                     'strategy': {
                         'matrix': {
                             'python': [3.6, 3.9]
