@@ -3,6 +3,7 @@
 # DO NOT EDIT MANUALLY
 jobs:
   python_unittests:
+    container: rockylinux:8
     runs-on: ubuntu-20.04
     steps:
     - name: Checkout code
