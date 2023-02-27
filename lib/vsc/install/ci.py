@@ -148,8 +148,8 @@ def gen_tox_ini():
         logging.error("package is not py3_only. Not supported. Please set 'py3_only'. will ignore python2.")
 
     # always run tests with Python 3
-    py3_env = 'py36'
-    envs.append(py3_env)
+    py3_envs = ['py36', 'py39']
+    envs.extend(py3_envs)
 
     pip_args, easy_install_args = '', ''
     if vsc_ci_cfg[INSTALL_SCRIPTS_PREFIX_OVERRIDE]:

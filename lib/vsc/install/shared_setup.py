@@ -165,7 +165,7 @@ URL_GHUGENT_HPCUGENT = 'https://github.ugent.be/hpcugent/%(name)s'
 
 RELOAD_VSC_MODS = False
 
-VERSION = '0.18.0'
+VERSION = '0.19.0'
 
 log.info('This is (based on) vsc.install.shared_setup %s' % VERSION)
 log.info('(using setuptools version %s located at %s)' % (setuptools.__version__, setuptools.__file__))
@@ -291,7 +291,7 @@ if hasattr(setuptools.dist.Distribution, 'get_egg_cache_dir'):
 
         # the original get_egg_cache_dir creates the .eggs directory if it doesn't exist yet,
         # but we want to have it versioned, so we rename it
-        egg_cache_dir_pyver = egg_cache_dir + '.py%s' % sys.version_info[0]
+        egg_cache_dir_pyver = egg_cache_dir + '.py%s' % '.'.join([str(x) for x in sys.version_info[0:2]])
         try:
             if not os.path.exists(egg_cache_dir_pyver):
                 os.rename(egg_cache_dir, egg_cache_dir_pyver)

@@ -98,7 +98,7 @@ EXPECTED_TOX_INI = """# tox.ini: configuration file for tox
 # DO NOT EDIT MANUALLY
 
 [tox]
-envlist = py36
+envlist = py36,py39
 skipsdist = true
 
 [testenv]
@@ -111,6 +111,9 @@ passenv = USER
 
 EXPECTED_TOX_INI_PY36_IGNORE = """
 [testenv:py36]
+ignore_outcome = true
+
+[testenv:py39]
 ignore_outcome = true
 """
 
