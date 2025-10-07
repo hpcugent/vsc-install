@@ -73,12 +73,12 @@ class ProspectorTest(TestCase):
         log.info("Detected prospector tests = %s", detected_tests)
         undetected_tests = [x for x in all_tests if x not in detected_tests]
 
-        if sys.version_info[0] < 3:
+        if sys.version_info[0] < 3:  # noqa: UP036
             # some of the prospector test cases don't exist in Python 2
             py2_invalid_tests = ["raising-bad-type"]
             undetected_tests = [x for x in undetected_tests if x not in py2_invalid_tests]
 
-        if sys.version_info[0] >= 3:
+        if sys.version_info[0] >= 3:  # noqa:UP036
             # some of the prospector test cases don't make sense in Python 3 because they yield syntax errors,
             # or are no longer a problem in Python 3
             py3_invalid_tests = [

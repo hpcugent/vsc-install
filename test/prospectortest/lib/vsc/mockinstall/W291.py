@@ -28,4 +28,4 @@
 
 def a_a(b_b):
     """Function a_a"""
-    return b_b 
+    return b_b

@@ -24,6 +24,3 @@
 # along with vsc-install. If not, see <http://www.gnu.org/licenses/>.
 #
 """Test unused_import"""
-
-
-import os

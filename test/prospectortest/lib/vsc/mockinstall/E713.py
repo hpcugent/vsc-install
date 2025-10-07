@@ -25,6 +25,5 @@
 #
 """Test E713"""
 
-
-if not 'c' in 'd':
+if "c" not in "d":
     pass

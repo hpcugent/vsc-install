@@ -28,11 +28,11 @@ Tests for the vsc.install.testing module.
 
 @author: Kenneth Hoste (Ghent University)
 """
+
 import logging
 import os
 import re
 import sys
-from unittest import TestLoader
 
 from vsc.install.testing import TestCase
 
@@ -42,8 +42,10 @@ class TestTesting(TestCase):
 
     def test_convert_exception_to_str(self):
         """Tests for convert_exception_to_str method."""
+
         class TestException(Exception):
             """Test Exception class."""
+
             def __init__(self, msg):
                 Exception.__init__(self, msg)
                 self.msg = msg
@@ -52,26 +54,26 @@ class TestTesting(TestCase):
                 return repr(self.msg)
 
         for exception in OSError, Exception, TestException:
-            msg = f'test_{exception.__name__}'
+            msg = f"test_{exception.__name__}"
             err = exception(msg)
             self.assertEqual(self.convert_exception_to_str(err), msg)
 
     def test_asserterrorregex(self):
         """Tests for assertErrorRegex method."""
-        testfile = '/no/such/file'
-        self.assertErrorRegex(KeyError, "foo", {'one': 1}.pop, 'foo')
-        self.assertErrorRegex(KeyError, "^foo$", {'two': 2}.pop, 'foo')
-        self.assertErrorRegex(KeyError, re.compile("^foo$"), {'two': 2}.pop, 'foo')
-        self.assertErrorRegex(KeyError, re.compile(".*bar.*"), {'two': 2}.pop, 'foobarbaz')
+        testfile = "/no/such/file"
+        self.assertErrorRegex(KeyError, "foo", {"one": 1}.pop, "foo")
+        self.assertErrorRegex(KeyError, "^foo$", {"two": 2}.pop, "foo")
+        self.assertErrorRegex(KeyError, re.compile("^foo$"), {"two": 2}.pop, "foo")
+        self.assertErrorRegex(KeyError, re.compile(".*bar.*"), {"two": 2}.pop, "foobarbaz")
         # INCEPTION!
         # id(0) should never throw any error
         regex = "Expected errors with .* should occur"
-        self.assertErrorRegex(AssertionError, regex, self.assertErrorRegex, Exception, '.*', id, 0)
+        self.assertErrorRegex(AssertionError, regex, self.assertErrorRegex, Exception, ".*", id, 0)
         # exception should be of specified type, otherwise it's not catched and simply raised through
-        self.assertErrorRegex(OSError, '.*', self.assertErrorRegex, KeyError, '.*', os.remove, testfile)
+        self.assertErrorRegex(OSError, ".*", self.assertErrorRegex, KeyError, ".*", os.remove, testfile)
         # provided regex pattern should match
         regex = "Pattern .* is found in .*"
-        self.assertErrorRegex(AssertionError, regex, self.assertErrorRegex, Exception, 'foobar', os.remove, testfile)
+        self.assertErrorRegex(AssertionError, regex, self.assertErrorRegex, Exception, "foobar", os.remove, testfile)
 
     def test_capture_stdout_stderr(self):
         """Test capturing of stdout."""
@@ -79,12 +81,12 @@ class TestTesting(TestCase):
         orig_sys_stderr = sys.stderr
 
         self.mock_stdout(True)
-        print('test')
+        print("test")
         self.assertEqual(self.get_stdout(), "test\n")
-        sys.stdout.write('foo')
+        sys.stdout.write("foo")
         self.mock_stderr(True)
-        sys.stdout.write('bar\n')
-        sys.stderr.write('testerror')
+        sys.stdout.write("bar\n")
+        sys.stderr.write("testerror")
         self.assertEqual(self.get_stdout(), "test\nfoobar\n")
         self.assertEqual(self.get_stderr(), "testerror")
         self.mock_stdout(False)
@@ -96,20 +98,20 @@ class TestTesting(TestCase):
     def test_mock_logmethod(self):
         """Test the mocked cache logger"""
         # There shouldn't be any yet
-        self.assertEqual(self.count_logcache('error'), 0)
+        self.assertEqual(self.count_logcache("error"), 0)
 
         myerror = self.mock_logmethod(logging.error)
 
         myerror("Error")
-        self.assertEqual(self.count_logcache('error'), 1)
+        self.assertEqual(self.count_logcache("error"), 1)
 
         myerror("Moar error")
         myerror("Even moar error")
-        self.assertEqual(self.count_logcache('error'), 3)
+        self.assertEqual(self.count_logcache("error"), 3)
 
-        self.reset_logcache('error')
-        self.assertEqual(self.count_logcache('error'), 0)
+        self.reset_logcache("error")
+        self.assertEqual(self.count_logcache("error"), 0)
 
         myerror("Error")
         myerror("Moar error")
-        self.assertEqual(self.count_logcache('error'), 2)
+        self.assertEqual(self.count_logcache("error"), 2)

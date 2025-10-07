@@ -24,11 +24,13 @@
 # along with vsc-install. If not, see <http://www.gnu.org/licenses/>.
 #
 """Test for W0623, overwriting names in exception handlers."""
-__revision__ = ''
+
+__revision__ = ""
 
 
 class MyError(Exception):
     """Special exception class."""
+
     pass
 
 
@@ -37,5 +39,5 @@ def some_function():
 
     try:
         {}["a"]
-    except KeyError as some_function:  # W0623
+    except KeyError:  # W0623
         pass

@@ -25,8 +25,7 @@
 #
 """Test raising-string"""
 
-
-myexc = 'my exception string'
+myexc = "my exception string"
 try:
     raise myexc
 except myexc:

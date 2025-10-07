@@ -25,7 +25,6 @@
 #
 """Test unpacking-in-except"""
 
-
 try:
     A = 2
 except ValueError, (errno, errstr):

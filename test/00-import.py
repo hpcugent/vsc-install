@@ -24,7 +24,9 @@
 # along with vsc-install. If not, see <http://www.gnu.org/licenses/>.
 #
 """Commontest"""
+
 import vsc.install.commontest
 
+
 class ImportTest(vsc.install.commontest.CommonTest):
-    EXCLUDE_MODS = [r'^vsc\.fancylogger$'] # it requires vsc-base
+    EXCLUDE_MODS = [r"^vsc\.fancylogger$"]  # it requires vsc-base

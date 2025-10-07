@@ -23,4 +23,4 @@
 # You should have received a copy of the GNU Library General Public License
 # along with vsc-install. If not, see <http://www.gnu.org/licenses/>.
 #
-""" Intentionally left empty"""
+"""Intentionally left empty"""

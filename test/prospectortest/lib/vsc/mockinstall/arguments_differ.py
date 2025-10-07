@@ -26,8 +26,9 @@
 """Test arguments_differ"""
 
 
-class LoremIpsum(object):
+class LoremIpsum:
     """Class LoremIpsum"""
+
     def __init__(self):
         """Function init"""
         self.a_a = 2
@@ -43,6 +44,7 @@ class LoremIpsum(object):
 
 class DolorSitAmet(LoremIpsum):
     """Class DolorSitAmet"""
+
     def odio(self, elit, gloria):
         """Function odio"""
         gloria = elit
