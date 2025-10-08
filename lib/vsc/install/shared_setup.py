@@ -30,16 +30,16 @@ Shared module for vsc software setup
 @author: Andy Georges (Ghent University)
 """
 
-import sys
+import builtins
 import glob
 import hashlib
 import inspect
 import json
 import os
+import re
 import shutil
 import traceback
-import re
-import builtins
+import sys
 
 MAX_SETUPTOOLS_VERSION_INFINITE = "72.0"  # current limit due to removal of test command
 MAX_SETUPTOOLS_VERSION_PY312 = "70.0"
