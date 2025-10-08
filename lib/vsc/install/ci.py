@@ -203,7 +203,7 @@ def gen_ruff_toml():
         "node_modules",
         "site-packages",
         "venv",
-        "test/prospectortest/*",
+        "test/*",
     ]
 
     extend_selectlist = [
@@ -263,7 +263,7 @@ def gen_ruff_toml():
         "docstring-code-format = true",
         "docstring-code-line-length = 120",
         'line-ending = "lf"',
-        'exclude = ["test/prospectortest/*"]',
+        'exclude = ["test/*"]',
     ]
 
     return "\n".join(lines) + "\n"
