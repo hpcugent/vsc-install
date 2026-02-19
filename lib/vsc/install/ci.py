@@ -45,7 +45,7 @@ from vsc.install.shared_setup import (
     vsc_setup,
 )
 
-RUFF_VERSION = "0.13.1"
+RUFF_VERSION = "0.15.1"
 TARGET_MINIMUM_PYTHON_VERSION = "py37"
 
 JENKINSFILE = "Jenkinsfile"
