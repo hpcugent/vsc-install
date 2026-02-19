@@ -1,5 +1,5 @@
 #
-# Copyright 2019-2025 Ghent University
+# Copyright 2019-2026 Ghent University
 #
 # This file is part of vsc-install,
 # originally created by the HPC team of Ghent University (http://ugent.be/hpc/en),
@@ -45,7 +45,7 @@ from vsc.install.shared_setup import (
     vsc_setup,
 )
 
-RUFF_VERSION = "0.13.1"
+RUFF_VERSION = "0.15.1"
 TARGET_MINIMUM_PYTHON_VERSION = "py37"
 
 JENKINSFILE = "Jenkinsfile"
