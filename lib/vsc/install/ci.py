@@ -140,7 +140,7 @@ def gen_github_action(repo_base_dir=os.getcwd()):
                     "uses": "actions/setup-python@v5",
                     "with": {"python-version": "${{matrix.python}}"},
                 },
-                {"name": "install ruff", "run": "pip install 'ruff'"},
+                {"name": "install ruff", "run": f"pip install 'ruff=={RUFF_VERSION}'"},
             ],
         }
         if vsc_ci_cfg[RUN_RUFF_FORMAT_CHECK]:
