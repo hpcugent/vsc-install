@@ -42,7 +42,7 @@ with open('pyproject.toml', 'rb') as f:
     print(data['project']['name'])
 ")
 
-VERSION=$(uv run -- python ${PYTHON_VERSION} --no-project --isolated --with tomli python -c "
+VERSION=$(uv run --python ${PYTHON_VERSION} --no-project --isolated --with tomli python -c "
 import tomli
 with open('pyproject.toml', 'rb') as f:
     data = tomli.load(f)
@@ -72,6 +72,8 @@ uv build --python ${PYTHON_VERSION}
 # Create staging directory
 STAGING_DIR=$(mktemp -d)
 trap "rm -rf ${STAGING_DIR}" EXIT
+
+SITE_PACKAGES_PATH="usr/lib/python${PYTHON_VER}/site-packages"
 
 INSTALL_DIR="${STAGING_DIR}/usr/lib/python3.9/site-packages"
 BIN_DIR="${STAGING_DIR}/usr/bin"
@@ -109,7 +111,6 @@ import re
 import sys
 from ${module} import ${func}
 if __name__ == '__main__':
-    sys.argv[0] = re.sub(r'(-script\.pyw|\.exe)?$', '', sys.argv[0])
     sys.exit(${func}())
 EOF
             chmod +x "${BIN_DIR}/${script_name}"
@@ -122,6 +123,13 @@ fi
 # Build RPM dependencies
 RPM_DEPS=$(uv run extract_rpm_deps.py)
 
+# Determine what to include in RPM
+FPM_PATHS="${SITE_PACKAGES_PATH}"
+if [ -n "$(ls -A ${BIN_DIR} 2>/dev/null)" ]; then
+    FPM_PATHS="${FPM_PATHS} usr/bin"
+fi
+
+
 # Build RPM from directory
 eval "fpm -s dir -t rpm \
     --name 'python3-${PACKAGE_NAME}' \
@@ -131,7 +139,7 @@ eval "fpm -s dir -t rpm \
     ${RPM_DEPS} \
     --rpm-dist el9 \
     -C ${STAGING_DIR} \
-    usr/lib/python3.9/site-packages"
+    ${FPM_PATHS}"
 
 echo "RPM built successfully!"
 ls -lh python3-${PACKAGE_NAME}*.rpm
