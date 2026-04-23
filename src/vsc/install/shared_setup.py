@@ -30,16 +30,16 @@ Shared module for vsc software setup
 @author: Andy Georges (Ghent University)
 """
 
-import sys
+import builtins
 import glob
 import hashlib
 import inspect
 import json
 import os
-import shutil
-import traceback
 import re
-import builtins
+import shutil
+import sys
+import traceback
 
 MAX_SETUPTOOLS_VERSION_INFINITE = "72.0"  # current limit due to removal of test command
 MAX_SETUPTOOLS_VERSION_PY312 = "70.0"
@@ -68,17 +68,14 @@ if sys.version_info.major == 3 and sys.version_info.minor > 6:
 else:
     MAX_SETUPTOOLS_VERSION = MAX_SETUPTOOLS_VERSION_PY36
 
-import setuptools  # noqa: E402
-import setuptools.dist  # noqa:E402
-import setuptools.command.test  # noqa:E402
-
 from distutils import log  # also for setuptools # noqa:E402
-
 from pathlib import Path  # noqa:E402
+from unittest import TestSuite  # noqa:E402
 
+import setuptools  # noqa: E402
+import setuptools.command.test  # noqa:E402
+import setuptools.dist  # noqa:E402
 from setuptools import Command  # noqa:E402
-from setuptools.command.test import test as TestCommand  # noqa:E402
-from setuptools.command.test import ScanningLoader  # noqa:E402
 from setuptools.command.bdist_rpm import bdist_rpm as orig_bdist_rpm  # noqa:E402
 from setuptools.command.build_py import build_py  # noqa:E402
 from setuptools.command.egg_info import egg_info  # noqa:E402
@@ -86,8 +83,8 @@ from setuptools.command.install_scripts import install_scripts  # noqa:E402
 
 # egg_info uses sdist directly through manifest_maker
 from setuptools.command.sdist import sdist  # noqa:E402
-
-from unittest import TestSuite  # noqa:E402
+from setuptools.command.test import ScanningLoader  # noqa:E402
+from setuptools.command.test import test as TestCommand  # noqa:E402
 
 have_xmlrunner = None
 try:
@@ -200,7 +197,7 @@ URL_GHUGENT_HPCUGENT = "https://github.ugent.be/hpcugent/%(name)s"
 
 RELOAD_VSC_MODS = False
 
-VERSION = "0.23.0"
+VERSION = "1.0.0"
 
 log.info("This is (based on) vsc.install.shared_setup %s", VERSION)
 log.info("(using setuptools version %s located at %s)", setuptools.__version__, setuptools.__file__)

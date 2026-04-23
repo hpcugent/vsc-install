@@ -1,6 +1,6 @@
 [project]
 name = "vsc-install"
-version = "0.24.0"
+version = "1.0.0"
 requires-python = ">=3.9"
 description = "Installation helpers for VSC-related Python packages"
 readme = "README.md"
