@@ -302,8 +302,11 @@ def gen_tox_ini():
         f"envlist = {','.join(envs)}",
         # instruct tox not to run sdist prior to installing the package in the tox environment
         # (setup.py requires vsc-install, which is not installed yet when 'python setup.py sdist' is run)
-        "skipsdist = true",
     ]
+
+    if not vsc_ci_cfg[UV_BASED]:
+        # uv does not support py36, so we cannot install it.
+        lines.append("skipsdist = true")
 
     test36 = [
         "",
@@ -356,8 +359,16 @@ def gen_tox_ini():
         if vsc_ci_cfg[MOVE_SETUP_CFG]:
             tlines.append("    mv setup.cfg.moved setup.cfg")
 
-    make_commands_pre(6, test36)
-    make_commands_pre(9, test39)
+    def setup_uv(minor, tlines):
+        if minor >= 9:
+            tlines.extend(["runner = uv-venv-lock-runner", "commands_pre = ", f"    uv python install 3.{minor}"])
+
+    if vsc_ci_cfg[UV_BASED]:
+        setup_uv(6, test36)
+        setup_uv(9, test39)
+    else:
+        make_commands_pre(6, test36)
+        make_commands_pre(9, test39)
 
     lines.extend(test36)
     lines.extend(test39)
@@ -365,11 +376,17 @@ def gen_tox_ini():
     lines.extend([
         "",
         "[testenv]",
-        "commands = python setup.py test",
         # $USER is not defined in tox environment, so pass it
         # see https://tox.readthedocs.io/en/latest/example/basic.html#passing-down-environment-variables
-        "passenv = USER",
+        "passenv=USER",
     ])
+
+    if vsc_ci_cfg[UV_BASED]:
+        lines.extend(["commands = pytest {posargs}"])
+    else:
+        lines.extend([
+            "commands = python setup.py test",
+        ])
 
     if vsc_ci_cfg[INHERIT_SITE_PACKAGES]:
         # inherit Python packages installed on the system, if requested
@@ -586,7 +603,7 @@ def gen_jenkinsfile():
     if vsc_ci_cfg[UV_BASED]:
         lines.extend([
             indent("steps {", level=5),
-            indent("sh 'export PATH="$HOME/.cargo/bin:$PATH" && ./uv run tox'", level=6),
+            indent("sh 'export PATH=\"$HOME/.cargo/bin:$PATH\" && ./uv run tox'", level=6),
             indent("sh 'rm -r $PWD/.venv'", level=6),
             indent("}", level=5),
         ])
