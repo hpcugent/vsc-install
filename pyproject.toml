@@ -15,9 +15,16 @@ authors = [
 dependencies = [
 ]
 
-[project.optional-dependencies]
-# e.g. tooling or test extras, add as needed
-dev = []
+[dependency-groups]
+dev = [
+  "tox",
+  "tox-uv",
+  "pytest>=7.0",
+  "pytest-cov",
+  "setuptools<54.0",
+  "prospector",
+]
+
 
 [project.scripts]
 # If the project exposes any console scripts, define them here.

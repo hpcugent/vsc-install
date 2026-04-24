@@ -602,10 +602,8 @@ def gen_jenkinsfile():
 
     if vsc_ci_cfg[UV_BASED]:
         lines.extend([
-            indent("steps {", level=5),
-            indent("sh 'export PATH=\"$HOME/.cargo/bin:$PATH\" && ./uv run tox'", level=6),
-            indent("sh 'rm -r $PWD/.venv'", level=6),
-            indent("}", level=5),
+            indent("sh './uv run tox'", level=5),
+            indent("sh 'rm -r $PWD/.venv $PWD/.tox'", level=5),
         ])
     else:
         for test_cmd in test_cmds:
