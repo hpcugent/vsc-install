@@ -390,6 +390,7 @@ class CITest(TestCase):
             "run_ruff_format_check": False,
             "run_ruff_check": False,
             "py36_tests_must_pass": True,
+            'py39_only': False,
             "py39_tests_must_pass": True,
         }
 
