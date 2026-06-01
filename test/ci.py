@@ -200,6 +200,25 @@ commands = python setup.py test
 passenv = USER
 """
 
+EXPECTED_TOX_INI_PY39_ONLY = """# tox.ini: configuration file for tox
+# This file was automatically generated using 'python -m vsc.install.ci'
+# DO NOT EDIT MANUALLY
+
+[tox]
+envlist = py39
+skipsdist = true
+
+[testenv:py39]
+setenv = SETUPTOOLS_USE_DISTUTILS=local
+commands_pre =
+    pip install 'setuptools<54.0' wheel
+    python -c "from setuptools import setup;setup(script_args=['-q', 'easy_install', '-v', '-U', 'vsc-install'])"
+
+[testenv]
+commands = python setup.py test
+passenv = USER
+"""
+
 EXPECTED_TOX_INI_WITH_PY39 = """# tox.ini: configuration file for tox
 # This file was automatically generated using 'python -m vsc.install.ci'
 # DO NOT EDIT MANUALLY
@@ -371,6 +390,7 @@ class CITest(TestCase):
             "run_ruff_format_check": False,
             "run_ruff_check": False,
             "py36_tests_must_pass": True,
+            'py39_only': False,
             "py39_tests_must_pass": True,
         }
 
@@ -494,6 +514,11 @@ class CITest(TestCase):
     def test_tox_ini(self):
         """Test generating of tox.ini."""
         self.assertEqual(gen_tox_ini(), EXPECTED_TOX_INI)
+
+    def test_tox_ini_py39_only(self):
+        """test that py39 tests must pass"""
+        self.write_vsc_ci_ini("py39_only=1")
+        self.assertEqual(gen_tox_ini(), EXPECTED_TOX_INI_PY39_ONLY)
 
     def test_tox_ini_py39_must_pass(self):
         """test that py39 tests must pass"""
