@@ -376,9 +376,6 @@ def gen_tox_ini():
     lines.extend([
         "",
         "[testenv]",
-        # $USER is not defined in tox environment, so pass it
-        # see https://tox.readthedocs.io/en/latest/example/basic.html#passing-down-environment-variables
-        "passenv=USER",
     ])
 
     if vsc_ci_cfg[UV_BASED]:
@@ -387,6 +384,13 @@ def gen_tox_ini():
         lines.extend([
             "commands = python setup.py test",
         ])
+
+    lines.extend([
+        # $USER is not defined in tox environment, so pass it
+        # see https://tox.readthedocs.io/en/latest/example/basic.html#passing-down-environment-variables
+        "passenv = USER",
+    ])
+
 
     if vsc_ci_cfg[INHERIT_SITE_PACKAGES]:
         # inherit Python packages installed on the system, if requested
