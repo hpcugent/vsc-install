@@ -31,14 +31,15 @@ Run with: python -m vsc.install.ci
 @author: Kenneth Hoste (Ghent University)
 """
 
+import configparser
 import copy
 import logging
 import os
 import sys
-import configparser
+from pathlib import Path
+
 import yaml
 
-from pathlib import Path
 from vsc.install.shared_setup import (
     MAX_SETUPTOOLS_VERSION_PY36,
     MAX_SETUPTOOLS_VERSION_PY39,
@@ -76,6 +77,7 @@ RUN_SHELLCHECK = "run_shellcheck"
 RUN_RUFF_FORMAT_CHECK = "run_ruff_format_check"
 RUN_RUFF_CHECK = "run_ruff_check"
 ENABLE_GITHUB_ACTIONS = "enable_github_actions"
+UV_BASED = "uv_based"
 
 logging.basicConfig(format="%(message)s", level=logging.INFO)
 
@@ -299,8 +301,11 @@ def gen_tox_ini():
         f"envlist = {','.join(envs)}",
         # instruct tox not to run sdist prior to installing the package in the tox environment
         # (setup.py requires vsc-install, which is not installed yet when 'python setup.py sdist' is run)
-        "skipsdist = true",
     ]
+
+    if not vsc_ci_cfg[UV_BASED]:
+        # uv does not support py36, so we cannot install it.
+        lines.append("skipsdist = true")
 
     test36 = [
         "",
@@ -353,8 +358,16 @@ def gen_tox_ini():
         if vsc_ci_cfg[MOVE_SETUP_CFG]:
             tlines.append("    mv setup.cfg.moved setup.cfg")
 
-    make_commands_pre(6, test36)
-    make_commands_pre(9, test39)
+    def setup_uv(minor, tlines):
+        if minor >= 9:
+            tlines.extend(["runner = uv-venv-lock-runner", "commands_pre = ", f"    uv python install 3.{minor}"])
+
+    if vsc_ci_cfg[UV_BASED]:
+        setup_uv(6, test36)
+        setup_uv(9, test39)
+    else:
+        make_commands_pre(6, test36)
+        make_commands_pre(9, test39)
 
     if not vsc_ci_cfg[PY39_ONLY]:
         lines.extend(test36)
@@ -363,11 +376,21 @@ def gen_tox_ini():
     lines.extend([
         "",
         "[testenv]",
-        "commands = python setup.py test",
+    ])
+
+    if vsc_ci_cfg[UV_BASED]:
+        lines.extend(["commands = pytest {posargs}"])
+    else:
+        lines.extend([
+            "commands = python setup.py test",
+        ])
+
+    lines.extend([
         # $USER is not defined in tox environment, so pass it
         # see https://tox.readthedocs.io/en/latest/example/basic.html#passing-down-environment-variables
         "passenv = USER",
     ])
+
 
     if vsc_ci_cfg[INHERIT_SITE_PACKAGES]:
         # inherit Python packages installed on the system, if requested
@@ -393,6 +416,7 @@ def parse_vsc_ci_cfg():
         ENABLE_GITHUB_ACTIONS: False,
         PY36_TESTS_MUST_PASS: True,
         PY39_TESTS_MUST_PASS: True,
+        UV_BASED: False,
         PY39_ONLY: False,
     }
 
@@ -505,6 +529,25 @@ def gen_jenkinsfile():
         indent("}"),
     ]
 
+    if vsc_ci_cfg[UV_BASED]:
+        uv_url = f"https://github.com/astral-sh/uv/releases/latest/download/uv-x86_64-unknown-linux-gnu.tar.gz"
+        uv_install_lines = [
+            indent("stage('install uv') {"),
+            indent("steps {", level=2),
+            indent(
+                f"sh 'curl -L --silent {uv_url} --output - | tar -xzv'",
+                level=3,
+            ),
+            indent("sh 'cp uv-x86_64-unknown-linux-gnu/uv .'", level=3),
+            indent("sh './uv --version'", level=3),
+            indent("sh './uv python install 3.9'", level=3),
+            indent("sh './uv sync --python 3.9 --managed-python'", level=3),
+            indent("sh './uv sync --python 3.9 --managed-python --group dev'", level=3),
+            indent("}", level=2),
+            indent("}"),
+        ]
+        lines.extend(uv_install_lines)
+
     if vsc_ci_cfg[RUN_RUFF_CHECK] or vsc_ci_cfg[RUN_RUFF_FORMAT_CHECK]:
         r_url = (
             f"https://github.com/astral-sh/ruff/releases/download/{RUFF_VERSION}/ruff-x86_64-unknown-linux-gnu.tar.gz"
@@ -561,12 +604,19 @@ def gen_jenkinsfile():
 
     lines.append(indent("stage('test') {", level=3))
     lines.append(indent("steps {", level=4))
-    for test_cmd in test_cmds:
-        # be careful with test commands that include single quotes!
-        if "'" in test_cmd:
-            lines.append(indent(f'sh """{test_cmd}"""', level=5))
-        else:
-            lines.append(indent(f"sh '{test_cmd}'", level=5))
+
+    if vsc_ci_cfg[UV_BASED]:
+        lines.extend([
+            indent("sh './uv run tox'", level=5),
+            indent("sh 'rm -r $PWD/.venv $PWD/.tox'", level=5),
+        ])
+    else:
+        for test_cmd in test_cmds:
+            # be careful with test commands that include single quotes!
+            if "'" in test_cmd:
+                lines.append(indent(f'sh """{test_cmd}"""', level=5))
+            else:
+                lines.append(indent(f"sh '{test_cmd}'", level=5))
     lines.append(indent("}", level=4))
     lines.append(indent("}", level=3))
 

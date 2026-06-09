@@ -39,23 +39,25 @@ import os
 import pprint
 import re
 import sys
-import pkg_resources
-from pathlib import Path
-from prospector.run import Prospector
-from prospector.config import ProspectorConfig
-
 from distutils import log
+from pathlib import Path
+
+import pkg_resources
+from prospector.config import ProspectorConfig
+from prospector.run import Prospector
+
 from vsc.install.ci import (
-    JENKINSFILE,
-    TOX_INI,
-    GITHUB_ACTIONS,
-    RUFF_TOML,
-    gen_ruff_toml,
-    gen_jenkinsfile,
-    gen_tox_ini,
-    gen_github_action,
-    parse_vsc_ci_cfg,
     ENABLE_GITHUB_ACTIONS,
+    GITHUB_ACTIONS,
+    JENKINSFILE,
+    RUFF_TOML,
+    TOX_INI,
+    UV_BASED,
+    gen_github_action,
+    gen_jenkinsfile,
+    gen_ruff_toml,
+    gen_tox_ini,
+    parse_vsc_ci_cfg,
 )
 from vsc.install.headers import check_header
 from vsc.install.shared_setup import vsc_setup

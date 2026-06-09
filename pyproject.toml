@@ -1,0 +1,43 @@
+[project]
+name = "vsc-install"
+version = "1.0.0"
+requires-python = ">=3.9"
+description = "Installation helpers for VSC-related Python packages"
+readme = "README.md"
+license = { text = "GPLv2" }
+
+authors = [
+    { name = "Andy Georges", email = "andy.georges@ugent.be" },
+    { name = "Stijn Deweirdt", email = "stijn.deweirdt@ugent.be" }
+]
+
+# Add only the REAL runtime dependencies here
+dependencies = [
+]
+
+[dependency-groups]
+dev = [
+  "tox",
+  "tox-uv",
+  "pytest>=7.0",
+  "pytest-cov",
+  "setuptools<54.0",
+  "prospector",
+]
+
+
+[project.scripts]
+# If the project exposes any console scripts, define them here.
+# Example:
+# vsc-install = "vsc_install.__main__:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/vsc"]
+only-include = ["src/vsc/install"]
+
+[tool.uv]
+# uv-specific config if you ever want it (optional)
