@@ -281,8 +281,10 @@ jobs:
       uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python }}
+    - name: install uv
+      uses: astral-sh/setup-uv@v3
     - name: install tox
-      run: pip install 'virtualenv' 'tox'
+      run: pip install 'virtualenv' 'tox' 'tox-uv'
     - name: add mandatory git remote
       run: git remote add hpcugent https://github.com/hpcugent/vsc-install.git
     - name: Run tox
@@ -372,6 +374,9 @@ class CITest(TestCase):
     def write_vsc_ci_ini(self, txt):
         """Write vsc-ci.ini file in current directory with specified contents."""
         Path("vsc-ci.ini").write_text("\n".join(["[vsc-ci]", txt]), encoding="utf8")
+        with open("vsc-ci.ini", "r") as f:
+            ls = f.readlines()
+            print(ls)
 
     def test_parse_vsc_ci_cfg(self):
         """Test parse_vsc_ci_cfg function."""
@@ -392,6 +397,7 @@ class CITest(TestCase):
             "py36_tests_must_pass": True,
             'py39_only': False,
             "py39_tests_must_pass": True,
+            "uv_based": False,
         }
 
         # (basically) empty vsc-ci.ini
