@@ -1603,6 +1603,7 @@ class vsc_setup:
                 "isort < 5.11.0",
                 "zipp < 3.16",  # no longer compatible with python 3.6
                 "pyyaml < 6.0.2",
+                "plette <= 2.1.0",
             ])
 
         # tested for python 3.9
