@@ -200,7 +200,7 @@ URL_GHUGENT_HPCUGENT = "https://github.ugent.be/hpcugent/%(name)s"
 
 RELOAD_VSC_MODS = False
 
-VERSION = "0.24.3"
+VERSION = "0.24.4"
 
 log.info("This is (based on) vsc.install.shared_setup %s", VERSION)
 log.info("(using setuptools version %s located at %s)", setuptools.__version__, setuptools.__file__)
@@ -1603,6 +1603,7 @@ class vsc_setup:
                 "isort < 5.11.0",
                 "zipp < 3.16",  # no longer compatible with python 3.6
                 "pyyaml < 6.0.2",
+                "plette <= 2.1.0",
             ])
 
         # tested for python 3.9
